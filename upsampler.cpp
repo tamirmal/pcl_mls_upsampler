@@ -109,8 +109,9 @@ main (int argc, char** argv)
   mls_upsampling.setSearchMethod (tree);
   mls_upsampling.setSearchRadius (0.03);
   mls_upsampling.setUpsamplingMethod (MovingLeastSquares<PointXYZ, PointNormal>::SAMPLE_LOCAL_PLANE);
-  mls_upsampling.setUpsamplingRadius (0.01);
-  mls_upsampling.setUpsamplingStepSize (0.01);
+  mls_upsampling.setUpsamplingRadius (0.005);
+  mls_upsampling.setUpsamplingStepSize (0.005);
+  mls_upsampling.setPolynomialOrder(2);
 
   PointCloud<PointNormal>::Ptr cloud_out(new PointCloud<PointNormal>);
   cloud_out->clear();

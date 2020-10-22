@@ -88,15 +88,14 @@ main (int argc, char** argv)
     return (-1);
   }
 
-  PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ>);
-  search::KdTree<PointXYZ>::Ptr tree;
-
   // Load file
-  pcl::PCLPointCloud2 cloud_blob;
-  loadPCDFile (argv[1], cloud_blob);
-  fromPCLPointCloud2 (cloud_blob, *cloud);
+  PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ>);
+  loadPCDFile (argv[1], *cloud);
+
+  cloud->is_dense = true;
 
   // Create search tree
+  search::KdTree<PointXYZ>::Ptr tree;
   tree.reset (new search::KdTree<PointXYZ> (false));
   tree->setInputCloud (cloud);
 

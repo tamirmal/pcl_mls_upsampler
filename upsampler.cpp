@@ -47,6 +47,7 @@
 #include <pcl/surface/mls.h>
 #include <pcl/common/common.h>
 #include <pcl/search/search.h>
+#include <pcl/filters/crop_box.h>
 
 #include <pcl/surface/impl/mls.hpp>
 #include <pcl/search/impl/kdtree.hpp>
@@ -54,6 +55,7 @@
 #include <pcl/search/impl/flann_search.hpp>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/filters/impl/crop_box.hpp>
 
 #include <string>
 using std::string;
@@ -94,6 +96,8 @@ main (int argc, char** argv)
 
   cloud->is_dense = true;
 
+  printf("input cloud : %d points\n", cloud->size());
+
   // Create search tree
   search::KdTree<PointXYZ>::Ptr tree;
   tree.reset (new search::KdTree<PointXYZ> (false));
@@ -114,8 +118,22 @@ main (int argc, char** argv)
 
   PointCloud<PointNormal>::Ptr cloud_out(new PointCloud<PointNormal>);
   cloud_out->clear();
-
   mls_upsampling.process (*cloud_out);
-  pcl::io::savePCDFile (argv[2], *cloud_out);
+
+  printf("after mls : %d points\n", cloud_out->size());
+
+  pcl::CropBox<pcl::PointNormal> boxFilter;
+  boxFilter.setMin(Eigen::Vector4f(-1, -1, -1, 1.0));
+  boxFilter.setMax(Eigen::Vector4f(1, 1, 1, 1.0));
+  boxFilter.setInputCloud(cloud_out);
+  //boxFilter.setNegative(false);
+
+  PointCloud<PointNormal>::Ptr cloud_out_boxed(new PointCloud<PointNormal>);
+  cloud_out_boxed->clear();
+  boxFilter.filter(*cloud_out_boxed);
+
+  printf("after box : %d points\n", cloud_out_boxed->size());
+
+  pcl::io::savePCDFile (argv[2], *cloud_out_boxed);
 }
 /* ]--- */

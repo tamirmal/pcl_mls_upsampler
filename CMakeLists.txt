@@ -9,9 +9,10 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 add_executable(upsampler upsampler.cpp)
+add_executable(smoother smoother.cpp)
 
 target_link_libraries(upsampler ${PCL_LIBRARIES})
-
+target_link_libraries(smoother ${PCL_LIBRARIES})
 ## if it fails with lz4 linkage problems, locate the liblz4.so file locally
 ## and manually link it (need to comment the above 'target_link_libraries()' and use the one below
 

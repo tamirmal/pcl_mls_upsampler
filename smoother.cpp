@@ -39,6 +39,8 @@
 
 //#include <gtest/gtest.h>
 
+#include <stdlib.h>
+
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/vtk_io.h>
@@ -66,33 +68,55 @@ using namespace std;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static char *input_file = NULL;
+static char *output_file = NULL;
+static double radius = 0.01;
+static unsigned int poly = 2;
 
+void parse_args(int argc, char **argv) {
+    for (int i = 0; i < argc; i++) {
+        switch (argv[i][0]) {
+            case 'i':
+                input_file = &argv[i][1];
+                break;
+            case 'o':
+                output_file = &argv[i][1];
+                break;
+            case 'r':
+                radius = (double)atof(&argv[i][1]);
+                break;
+            case 'p':
+                poly = atoi(&argv[i][1]);
+                break;
+            default:
+                cout << "unknown option " << argv[i] << endl;
+                break;
+        }
+    }
+
+    cout << "input_file=" << input_file << endl;
+    cout << "output_file=" << output_file << endl;
+    cout << "r=" << radius << endl;
+    cout << "poly=" << poly << endl;
+
+    if (!input_file || !output_file)
+        exit(-1);
+}
 
 /* ---[ */
 int
 main (int argc, char** argv)
 {
-  if (argc < 2)
-  {
-    std::cerr << "No test file given." << std::endl;
-    return (-1);
-  }
+  parse_args(argc - 1, &argv[1]);
 
-  if (argc < 3)
-  {
-    std::cerr << "No output file given" << std::endl;
-    return (-1);
-  }
-
-  if (0 == (strcmp(argv[1], argv[2])))
-  {
+  if (0 == (input_file, output_file)) {
     std:cerr << "input==output ! give different file";
     return (-1);
   }
 
   // Load file
   PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ>);
-  loadPCDFile (argv[1], *cloud);
+  loadPCDFile (input_file, *cloud);
 
   cloud->is_dense = true;
 
@@ -104,22 +128,18 @@ main (int argc, char** argv)
   tree->setInputCloud (cloud);
 
   // Testing upsampling
-  MovingLeastSquares<PointXYZ, PointNormal> mls_upsampling;
+  MovingLeastSquares<PointXYZ, PointNormal> mls;
   // Set parameters
   mls_upsampling.setInputCloud (cloud);
   mls_upsampling.setComputeNormals (true);
-  mls_upsampling.setPolynomialFit (true);
+  mls_upsampling.setPolynomialFit (poly > 1);
+  mls_upsampling.setPolynomialOrder(poly);
   mls_upsampling.setSearchMethod (tree);
-  mls_upsampling.setSearchRadius (0.03);
-  //mls_upsampling.setUpsamplingMethod (MovingLeastSquares<PointXYZ, PointNormal>::SAMPLE_LOCAL_PLANE);
-  mls_upsampling.setUpsamplingMethod (MovingLeastSquares<PointXYZ, PointNormal>::DISTINCT_CLOUD);
-  mls_upsampling.setUpsamplingRadius (0.005);
-  mls_upsampling.setUpsamplingStepSize (0.005);
-  mls_upsampling.setPolynomialOrder(2);
+  mls_upsampling.setSearchRadius (radius);
 
   PointCloud<PointNormal>::Ptr cloud_out(new PointCloud<PointNormal>);
   cloud_out->clear();
-  mls_upsampling.process (*cloud_out);
+  mls.process (*cloud_out);
 
   printf("after mls : %d points\n", cloud_out->size());
 
@@ -135,6 +155,6 @@ main (int argc, char** argv)
 
   printf("after box : %d points\n", cloud_out_boxed->size());
 
-  pcl::io::savePCDFile (argv[2], *cloud_out_boxed);
+  pcl::io::savePCDFile (output_file, *cloud_out_boxed);
 }
 /* ]--- */
